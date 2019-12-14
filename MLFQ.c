@@ -5,7 +5,9 @@
 void findWaitingTime(int processes[], int n,int bt[], int wt[], int quantum)
 {
 	// Make a copy of bt[] to store remaining burst time
-	int rem_bt[1000]={0};
+	int* rem_bt;
+	rem_bt = (int*)calloc(n, sizeof(int));
+
 	for (int i = 0 ; i < n ; i++)
 		rem_bt[i] = bt[i];
 
@@ -46,6 +48,7 @@ void findWaitingTime(int processes[], int n,int bt[], int wt[], int quantum)
             // Add burst time of previous processes
             wt[i] = rem_bt[i-1] + wt[i-1];
         }
+        free(rem_bt);
 }
 
 // Function to calculate turn around time
@@ -60,7 +63,11 @@ void findTurnAroundTime(int processes[], int n,int bt[], int wt[], int tat[])
 // Function to calculate average time
 void findavgTime(int processes[], int n, int bt[],int quantum)
 {
-	int wt[1000]={0}, tat[1000]={0}, total_wt = 0, total_tat = 0,total_bt=0;
+	int total_wt = 0, total_tat = 0,total_bt=0;
+	int* wt;
+	int* tat;
+	wt = (int*)calloc(n, sizeof(int));
+	tat = (int*)calloc(n, sizeof(int));
 
 	// calculate waiting time
 	findWaitingTime(processes, n, bt, wt, quantum);
@@ -83,6 +90,8 @@ void findavgTime(int processes[], int n, int bt[],int quantum)
     printf("Average turn around time = %.3f\n",(float)total_tat/n);
     printf("Throughput time= %.3f\n",(float)total_bt/n);
 
+    free(wt);
+    free(tat);
 }
 
 // Driver code
@@ -90,9 +99,14 @@ int main()
 {
 	// process id's
 	int i=0,quantum=0;
+	int* processes;
+    int* burst_time;
 	printf("Enter number of processes: ");
 	scanf("%d",&i);
-	int processes[1000]={0},burst_time[1000]={0};
+
+	processes = (int*)calloc(i, sizeof(int));
+	burst_time = (int*)calloc(i, sizeof(int));
+
 	if (i<1)
 	{
 	    printf("Input is not accepted");
@@ -120,6 +134,8 @@ int main()
 	{
 	    findavgTime(processes, i, burst_time, quantum);
 	}
+	free(processes);
+	free(burst_time);
 	return 0;
 }
 
