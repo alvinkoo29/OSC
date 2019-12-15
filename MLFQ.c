@@ -6,6 +6,9 @@ void findWaitingTime(int processes[], int n,int burst_time[], int waiting_time[]
 {
 	// Make a copy of burst_time to calculate waiting time
 	int* remaining_burst_time;
+	bool* SecondQ;
+
+	SecondQ= (bool*)calloc(n,sizeof(bool));
 	remaining_burst_time = (int*)calloc(n, sizeof(int));
 
 	for (int i = 0 ; i < n ; i++)
@@ -27,6 +30,9 @@ void findWaitingTime(int processes[], int n,int burst_time[], int waiting_time[]
 
 					// reduces burst time by time quantum
 					remaining_burst_time[i] -= quantum;
+
+					// the process will be moved to the second queue
+					SecondQ[i]=true;
 				}
 
 				// if less than time quantum (final run)
@@ -42,12 +48,20 @@ void findWaitingTime(int processes[], int n,int burst_time[], int waiting_time[]
 					remaining_burst_time[i] = 0;
                 }
             }
-        for (int i = 1; i < n ; i++)
-        {
-            // Add burst time of previous processes
-            waiting_time[i] = remaining_burst_time[i] + waiting_time[i-1];
         }
-    }
+
+        // loop for FCFS
+        for (int i = 0 ; i < n; i++)
+        {
+            if (SecondQ[i]==true)
+            {
+                // completion - burst time
+                t=t + remaining_burst_time[i];
+
+                // waiting time = Completion time - burst time
+                waiting_time[i] = t - burst_time[i];
+            }
+        }
     // to prevent memory leak
 	free(remaining_burst_time);
 }
@@ -140,4 +154,3 @@ int main()
 	free(burst_time);
 	return 0;
 }
-
