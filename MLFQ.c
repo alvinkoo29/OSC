@@ -102,7 +102,7 @@ void findavgTime(int processes[], int n, int burst_time[],int quantum)
 
 	printf("Average waiting time= %.3f\n",(float)total_waiting_time/n);
     printf("Average turn around time = %.3f\n",(float)total_turn_around_time/n);
-    printf("Throughput time= %.3f\n",(float)total_burst_time/n);
+    printf("Throughput time= %.3f\n",(float)n/total_burst_time);
 
     // free unused memory
     free(waiting_time);
