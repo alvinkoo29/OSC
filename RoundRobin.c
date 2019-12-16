@@ -2,18 +2,18 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-void findWaitingTime(int processes[], int n,int bt[], int wt[], int quantum)
+void findWaitingTime(int processes[], int n,int burst_time[], int waiting_time[], int quantum)
 {
-	// Make a copy of bt[] to store remaining burst time
-	int* rem_bt;
-	rem_bt = (int*)calloc(n, sizeof(int));
+	// Make a copy of burst_time to calculate waiting time
+	int* remaining_burst_time;
+	remaining_burst_time = (int*)calloc(n, sizeof(int));
 
 	for (int i = 0 ; i < n ; i++)
-		rem_bt[i] = bt[i];
+		remaining_burst_time[i] = burst_time[i];
 
-	int t = 0; // Current time
+	int t = 0; // Initialize to ensure consistent calculation
 
-	// Loop all the processes until complete
+	// Loop until all burst time = 0
 	while (1)
 	{
 		bool done = true;
@@ -22,30 +22,30 @@ void findWaitingTime(int processes[], int n,int bt[], int wt[], int quantum)
 		for (int i = 0 ; i < n; i++)
 		{
 			// If process is still incomplete (has burst time)
-			if (rem_bt[i] > 0)
+			if (remaining_burst_time[i] > 0)
 			{
 				done = false; // There is remaining burst time
 
-				if (rem_bt[i] > quantum)
+				if (remaining_burst_time[i] > quantum)
 				{
 					// counter to calculate time taken for each process
 					t += quantum;
 
-					// reduces by allocated quantum time
-					rem_bt[i] -= quantum;
+					// reduces burst time by time quantum
+					remaining_burst_time[i] -= quantum;
 				}
 
-				// If remaining is less than quantum (last pass)
+				// if less than time quantum (final run)
 				else
 				{
-					// adds remaining time needed (less than quantum)
-					t = t + rem_bt[i];
+					// adds remainder burst time
+					t = t + remaining_burst_time[i];
 
 					// Waiting time is current time minus time used by this process
-					wt[i] = t - bt[i];
+					waiting_time[i] = t - burst_time[i];
 
-					// The process is completed (burst time=0)
-					rem_bt[i] = 0;
+					// To show that the process is completed
+					remaining_burst_time[i] = 0;
 				}
 			}
 		}
@@ -54,61 +54,63 @@ void findWaitingTime(int processes[], int n,int bt[], int wt[], int quantum)
 		if (done == true)
 		break;
 	}
-	free(rem_bt);
+	// to prevent memory leak
+	free(remaining_burst_time);
 }
 
-// Function to calculate turn around time
-void findTurnAroundTime(int processes[], int n,int bt[], int wt[], int tat[])
+// Function to calculate turn around time for each process
+void findTurnAroundTime(int processes[], int n,int burst_time[], int waiting_time[], int turn_around_time[])
 {
-	// calculating turnaround time
+	// calculate turnaround time
 	for (int i = 0; i < n ; i++)
-		tat[i] = bt[i] + wt[i];
+		turn_around_time[i] = burst_time[i] + waiting_time[i];
 }
 
 // Function to calculate average time
-void findavgTime(int processes[], int n, int bt[],int quantum)
+void findavgTime(int processes[], int n, int burst_time[],int quantum)
 {
-	int total_wt = 0, total_tat = 0;
+	int total_waiting_time = 0, total_turn_around_time = 0,total_burst_time=0;
 
-	int* wt;
-	int* tat;
-	wt = (int*)calloc(n, sizeof(int));
-	tat = (int*)calloc(n, sizeof(int));
-
+	int *waiting_time,*turn_around_time;
+	waiting_time = (int*)calloc(n, sizeof(int));
+	turn_around_time = (int*)calloc(n, sizeof(int));
 
 	// calculate waiting time
-	findWaitingTime(processes, n, bt, wt, quantum);
+	findWaitingTime(processes, n, burst_time, waiting_time, quantum);
 
 	// calculate turn around time
-	findTurnAroundTime(processes, n, bt, wt, tat);
+	findTurnAroundTime(processes, n, burst_time, waiting_time,turn_around_time);
 
 	printf("Processes\t"  "Burst time\t"  "Waiting time\t"  "Turn around time\n");
 
-	// Calculate total waiting time and total turn around time
+	// Stores total waiting time and turn around time
 	for (int i=0; i<n; i++)
 	{
-		total_wt = total_wt + wt[i];
-		total_tat = total_tat + tat[i];
-		printf(" %d\t\t %d\t\t %d \t\t %d\n",i+1,bt[i],wt[i],tat[i]);
+		total_waiting_time = total_waiting_time + waiting_time[i];
+		total_turn_around_time = total_turn_around_time + turn_around_time[i];
+		total_burst_time=total_burst_time+burst_time[i];
+		printf(" %d\t\t %d\t\t %d \t\t %d\n",i+1,burst_time[i],waiting_time[i],turn_around_time[i]);
 	}
 
-	printf("Average waiting time= %.3f\n",(float)total_wt/n);
-    printf("Average turn around time = %.3f\n",(float)total_tat/n);
+	// Calculate average waiting time and turn around time
 
-    free(wt);
-    free(tat);
+	printf("Average waiting time= %.3f\n",(float)total_waiting_time/n);
+    printf("Average turn around time = %.3f\n",(float)total_turn_around_time/n);
+    printf("Throughput time= %.3f\n",(float)n/total_burst_time);
+
+    // free unused memory
+    free(waiting_time);
+    free(turn_around_time);
 }
 
-// Driver code
 int main()
 {
-	// process id's
 	int i,quantum;
-	int* processes;
-    int* burst_time;
+	int *processes,*burst_time;
 	printf("Enter number of processes: ");
 	scanf("%d",&i);
 
+	// allocate dynamic array according to user input
 	processes = (int*)calloc(i, sizeof(int));
 	burst_time = (int*)calloc(i, sizeof(int));
 
@@ -127,7 +129,7 @@ int main()
             scanf("%d",&burst_time[x]);
             if (burst_time[x]<1)
                 {
-                    printf("Incorrect format (Please enter a digit)\n");
+                    printf("Incorrect format (Please enter a non-negative digit)\n");
 
                 }
             }while (burst_time[x]<1);
@@ -140,6 +142,8 @@ int main()
 	{
 	    findavgTime(processes, i, burst_time, quantum);
 	}
+
+	// free allocated unused memory
 	free(processes);
 	free(burst_time);
 	return 0;
